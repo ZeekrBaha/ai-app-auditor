@@ -1,8 +1,8 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
+import { SKIP_DIRS } from '../util/fs.js';
 
-const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'dist', '.ai-app-auditor']);
 const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const RISKY_SUFFIXES = ['KEY', 'SECRET', 'TOKEN', 'PASSWORD'];
 
@@ -55,7 +55,7 @@ export const envCheck: Check = async (ctx) => {
   const findings: Finding[] = [];
 
   for (const v of used) {
-    if (v.startsWith('NEXT_PUBLIC_') && RISKY_SUFFIXES.some((s) => v.endsWith(s) || v.includes(`_${s}_`) || v.endsWith(`_${s}`))) {
+    if (v.startsWith('NEXT_PUBLIC_') && RISKY_SUFFIXES.some((s) => v.endsWith(s) || v.includes(`_${s}_`))) {
       findings.push({
         checkId: 'env',
         severity: 'blocker',

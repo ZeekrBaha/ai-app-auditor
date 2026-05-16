@@ -1,8 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-
-const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'dist', '.ai-app-auditor']);
+import { SKIP_DIRS } from '../util/fs.js';
 
 // Patterns intentionally lack the /g flag — we only call test() per-line, never iterate matches.
 const PATTERNS: Array<{ name: string; re: RegExp }> = [
