@@ -1,0 +1,34 @@
+{
+  "name": "ai-app-auditor",
+  "version": "0.0.1",
+  "description": "Pre-deploy quality and safety scanner for AI-generated Next.js + Neon apps",
+  "type": "module",
+  "bin": {
+    "ai-app-auditor": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --exclude 'tests/smoke/**'",
+    "test:watch": "vitest --exclude 'tests/smoke/**'",
+    "test:smoke": "vitest run tests/smoke",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "execa": "^9.5.1",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "playwright": "^1.49.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
