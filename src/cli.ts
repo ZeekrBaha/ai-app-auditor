@@ -12,7 +12,7 @@ async function main() {
     .name('ai-app-auditor')
     .description('Pre-deploy quality and safety scanner for AI-generated Next.js + Neon apps')
     .option('--path <dir>', 'repo path to scan', '.')
-    .option('--smoke', 'also run Playwright smoke test', false)
+    .option('--smoke', 'also run Playwright smoke test (V2 — not yet implemented)', false)
     .parse(process.argv);
 
   const opts = program.opts<{ path: string; smoke: boolean }>();
