@@ -1,15 +1,12 @@
 import type { Check, Finding } from '../types.js';
 import { runCommand as defaultRunCommand, type CommandResult } from '../runner/command.js';
+import { lastNLines } from '../util/text.js';
 
 type Deps = {
   runCommand?: (cmd: string, opts: { cwd: string; timeoutMs: number }) => Promise<CommandResult>;
 };
 
-function lastNLines(s: string, n: number): string {
-  return s.split('\n').slice(-n).join('\n');
-}
-
-export const testCheck = (async (ctx, deps: Deps = {}) => {
+export const testCheck: Check<Deps> = async (ctx, deps = {}) => {
   const run = deps.runCommand ?? defaultRunCommand;
   const findings: Finding[] = [];
 
@@ -46,4 +43,4 @@ export const testCheck = (async (ctx, deps: Deps = {}) => {
 
   findings.push({ checkId: 'test', severity: 'pass', title: 'Tests passed', detail: '' });
   return findings;
-}) as Check & ((ctx: import('../types.js').CheckContext, deps?: Deps) => Promise<Finding[]>);
+};

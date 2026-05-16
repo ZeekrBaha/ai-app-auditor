@@ -21,7 +21,7 @@ export type Finding = {
   evidence?: string;
 };
 
-export type Check = (ctx: CheckContext) => Promise<Finding[]>;
+export type Check<D = unknown> = (ctx: CheckContext, deps?: D) => Promise<Finding[]>;
 
 export type Report = {
   verdict: 'ship' | 'do-not-ship';
