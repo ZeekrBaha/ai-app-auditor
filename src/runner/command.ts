@@ -26,6 +26,7 @@ export async function runCommand(cmd: string, opts: CommandOptions): Promise<Com
       stderr: result.stderr ?? '',
       timedOut: Boolean(result.timedOut),
     };
+    // reject:false handles exit/timeout/signal; catch is for spawn-time failures (invalid options, etc).
   } catch (err: unknown) {
     const e = err as { timedOut?: boolean; exitCode?: number; stdout?: string; stderr?: string };
     return {
