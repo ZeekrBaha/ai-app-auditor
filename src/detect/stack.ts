@@ -1,21 +1,13 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { StackInfo } from '../types.js';
+import { exists } from '../util/fs.js';
 
 type PackageJson = {
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 };
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 async function readPackageJson(repoPath: string): Promise<PackageJson> {
   const raw = await fs.readFile(path.join(repoPath, 'package.json'), 'utf8');

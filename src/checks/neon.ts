@@ -1,17 +1,14 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
+import { exists } from '../util/fs.js';
 
-const AUTH_PATTERNS = [/\bauth\s*\(/, /\bgetServerSession\s*\(/, /\bcurrentUser\s*\(/];
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+// Anchors require the auth call to start the identifier (not be a member call like firebase.auth()).
+const AUTH_PATTERNS = [
+  /(?:^|[^.\w-])auth\s*\(/,
+  /(?:^|[^.\w-])getServerSession\s*\(/,
+  /(?:^|[^.\w-])currentUser\s*\(/,
+];
 
 async function readEnvExampleKeys(repoPath: string): Promise<Set<string>> {
   try {

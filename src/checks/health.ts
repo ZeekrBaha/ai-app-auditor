@@ -1,15 +1,6 @@
-import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { exists } from '../util/fs.js';
 
 export const healthCheck: Check = async (ctx) => {
   const findings: Finding[] = [];
