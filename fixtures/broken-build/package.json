@@ -1,0 +1,13 @@
+{
+  "name": "broken-build",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node -e \"console.error('build broke'); process.exit(1)\"",
+    "lint": "node -e \"console.error('lint broke'); process.exit(1)\"",
+    "test": "node -e \"console.error('tests failed'); process.exit(1)\""
+  },
+  "dependencies": {
+    "next": "15.0.0"
+  }
+}
