@@ -1,0 +1,6 @@
+{
+  "name": "leaked-secret",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": { "next": "15.0.0" }
+}
