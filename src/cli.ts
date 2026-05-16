@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { runAudit } from './orchestrator.js';
 import { writeOutputs } from './output/write.js';
+import { createStderrReporter } from './output/reporter.js';
 import { exists } from './util/fs.js';
 
 async function main() {
@@ -40,7 +41,14 @@ async function main() {
   }
 
   try {
-    const report = await runAudit({ repoPath, smoke: opts.smoke });
+    const totalSteps = (opts.smoke ? 9 : 8) + 1;
+    const reporter = createStderrReporter({
+      total: totalSteps,
+      write: (s) => process.stderr.write(s),
+    });
+    process.stderr.write(`ai-app-auditor → scanning ${repoPath}\n\n`);
+    const report = await runAudit({ repoPath, smoke: opts.smoke, reporter });
+    process.stderr.write('\n');
     const md = await writeOutputs(report, repoPath);
     process.stdout.write(md);
     process.exit(report.verdict === 'ship' ? 0 : 2);

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as path from 'node:path';
 import { runAudit } from '../src/orchestrator.js';
+import type { Finding, Reporter } from '../src/types.js';
 
 const GOOD = path.resolve(__dirname, '../fixtures/good-next-neon');
 const BROKEN = path.resolve(__dirname, '../fixtures/broken-build');
@@ -33,6 +34,51 @@ describe('runAudit', () => {
     });
     expect(report.verdict).toBe('ship');
     expect(report.score).toBe(100);
+  });
+
+  it('emits start/done events for each pipeline step in order', async () => {
+    const runCommand = vi
+      .fn()
+      .mockResolvedValue({ exitCode: 0, stdout: '', stderr: '', timedOut: false });
+
+    type Event =
+      | { kind: 'start'; step: string }
+      | { kind: 'done'; step: string; findingCount: number; durationMs: number };
+    const events: Event[] = [];
+    const reporter: Reporter = {
+      start: (step) => events.push({ kind: 'start', step }),
+      done: (step, findings: Finding[], durationMs) =>
+        events.push({ kind: 'done', step, findingCount: findings.length, durationMs }),
+    };
+
+    await runAudit({
+      repoPath: GOOD,
+      smoke: false,
+      runCommand,
+      createCompletion: aiOk,
+      reporter,
+    });
+
+    const expectedSteps = [
+      'Project health',
+      'Build',
+      'Lint',
+      'Tests',
+      'Secret scan',
+      'Env hygiene',
+      'Neon DB checks',
+      'App Router auth',
+      'AI report',
+    ];
+
+    expect(events.map((e) => `${e.kind}:${e.step}`)).toEqual(
+      expectedSteps.flatMap((s) => [`start:${s}`, `done:${s}`]),
+    );
+    for (const e of events) {
+      if (e.kind === 'done') {
+        expect(e.durationMs).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 
   it('returns do-not-ship when build fails', async () => {

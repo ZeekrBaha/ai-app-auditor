@@ -23,6 +23,11 @@ export type Finding = {
 
 export type Check<D = unknown> = (ctx: CheckContext, deps?: D) => Promise<Finding[]>;
 
+export type Reporter = {
+  start: (step: string) => void;
+  done: (step: string, findings: Finding[], durationMs: number) => void;
+};
+
 export type Report = {
   verdict: 'ship' | 'do-not-ship';
   score: number;
