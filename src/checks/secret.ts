@@ -4,12 +4,13 @@ import type { Check, Finding } from '../types.js';
 
 const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'dist', '.ai-app-auditor']);
 
+// Patterns intentionally lack the /g flag — we only call test() per-line, never iterate matches.
 const PATTERNS: Array<{ name: string; re: RegExp }> = [
-  { name: 'OpenAI API key', re: /sk-[a-zA-Z0-9]{20,}/g },
-  { name: 'AWS access key', re: /AKIA[0-9A-Z]{16}/g },
-  { name: 'Neon connection string', re: /postgresql:\/\/[^@\s]+@ep-[a-z0-9-]+\.[a-z0-9-]+\.neon\.tech\//g },
-  { name: 'Stripe live secret key', re: /sk_live_[a-zA-Z0-9]{20,}/g },
-  { name: 'Stripe live publishable key', re: /pk_live_[a-zA-Z0-9]{20,}/g },
+  { name: 'OpenAI API key', re: /\bsk-(?:proj-)?[a-zA-Z0-9_-]{40,}/ },
+  { name: 'AWS access key', re: /\bAKIA[0-9A-Z]{16}\b/ },
+  { name: 'Neon connection string', re: /postgresql:\/\/[^@\s]+@ep-[a-z0-9-]+\.[a-z0-9-]+\.neon\.tech\// },
+  { name: 'Stripe live secret key', re: /\bsk_live_[a-zA-Z0-9]{20,}/ },
+  { name: 'Stripe live publishable key', re: /\bpk_live_[a-zA-Z0-9]{20,}/ },
 ];
 
 const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.env']);
@@ -46,7 +47,6 @@ export const secretCheck: Check = async (ctx) => {
     const lines = content.split('\n');
     for (const { name, re } of PATTERNS) {
       for (let i = 0; i < lines.length; i++) {
-        re.lastIndex = 0;
         if (re.test(lines[i])) {
           const rel = path.relative(ctx.repoPath, file);
           findings.push({
