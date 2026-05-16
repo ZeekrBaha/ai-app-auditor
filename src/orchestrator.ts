@@ -34,8 +34,6 @@ export async function runAudit(opts: RunAuditOptions): Promise<Report> {
   all.push(...(await routeCheck(ctx)));
 
   if (opts.smoke) {
-    // @ts-expect-error Task 18 creates ./smoke/playwright.ts; dynamic import keeps the
-    // orchestrator runnable today and lazy-loads playwright only when --smoke is passed.
     const { runSmokeTest } = await import('./smoke/playwright.js');
     all.push(...(await runSmokeTest(ctx)));
   }

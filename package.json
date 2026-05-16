@@ -10,7 +10,7 @@
     "build": "tsc",
     "test": "vitest run --exclude 'tests/smoke/**'",
     "test:watch": "vitest --exclude 'tests/smoke/**'",
-    "test:smoke": "vitest run tests/smoke",
+    "test:smoke": "vitest run tests/smoke/",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "start": "node dist/cli.js"
   },
