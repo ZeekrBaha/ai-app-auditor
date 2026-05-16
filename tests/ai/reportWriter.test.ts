@@ -33,7 +33,6 @@ describe('aiReportWriter', () => {
     const createCompletion = vi.fn().mockResolvedValue({
       summary: 'Build is broken; fix it first.',
       fixOrder: ['Build failed', 'Missing README'],
-      explanations: { build: 'Build failures block deploys.', health: 'README helps onboarding.' },
     });
     const report = await aiReportWriter(findings, stack, { createCompletion });
     expect(report.verdict).toBe('do-not-ship');
@@ -48,10 +47,29 @@ describe('aiReportWriter', () => {
     const createCompletion = vi
       .fn()
       .mockRejectedValueOnce(new Error('rate_limit'))
-      .mockResolvedValueOnce({ summary: 's', fixOrder: [], explanations: {} });
+      .mockResolvedValueOnce({ summary: 's', fixOrder: [] });
     const report = await aiReportWriter(findings, stack, { createCompletion });
     expect(createCompletion).toHaveBeenCalledTimes(2);
     expect(report.summary).toBe('s');
+  });
+
+  it('strips `evidence` from findings before passing them to the AI (privacy)', async () => {
+    process.env.OPENAI_API_KEY = 'sk-test';
+    const withEvidence: Finding[] = [
+      {
+        checkId: 'build',
+        severity: 'blocker',
+        title: 'Build failed',
+        detail: 'exit 1',
+        evidence: '/Users/baha/secret/path/file.ts:42 leaked source line here',
+      },
+    ];
+    const createCompletion = vi.fn().mockResolvedValue({ summary: 's', fixOrder: [] });
+    await aiReportWriter(withEvidence, stack, { createCompletion });
+    const sentFindings = createCompletion.mock.calls[0][0].findings;
+    for (const f of sentFindings) {
+      expect(f).not.toHaveProperty('evidence');
+    }
   });
 
   it('throws if both attempts fail', async () => {
