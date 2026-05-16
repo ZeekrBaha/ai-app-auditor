@@ -8,7 +8,7 @@ It tells you whether your app is ready to ship, what will break, and which issue
 
 - Node 20+
 - pnpm
-- `OPENAI_API_KEY` set in your shell or `.env` (required — the AI summary, severity ranking, and fix order all use OpenAI `gpt-4o-mini`)
+- `OPENAI_API_KEY` exported in your shell (required — the AI summary, severity ranking, and fix order all use OpenAI `gpt-4o-mini`). Loading from a `.env` file is a V2 feature; for now, `export` it directly or use `node --env-file=.env` to launch.
 
 ## Usage
 

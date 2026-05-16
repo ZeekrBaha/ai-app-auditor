@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as path from 'node:path';
 import { runAudit } from '../src/orchestrator.js';
 
@@ -11,8 +11,17 @@ const aiOk = vi.fn().mockResolvedValue({
 });
 
 describe('runAudit', () => {
-  it('returns ship for good-next-neon (AI mocked, runCommand mocked to pass everything)', async () => {
+  let prevKey: string | undefined;
+  beforeEach(() => {
+    prevKey = process.env.OPENAI_API_KEY;
     process.env.OPENAI_API_KEY = 'sk-test';
+  });
+  afterEach(() => {
+    if (prevKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = prevKey;
+  });
+
+  it('returns ship for good-next-neon (AI mocked, runCommand mocked to pass everything)', async () => {
     const runCommand = vi
       .fn()
       .mockResolvedValue({ exitCode: 0, stdout: '', stderr: '', timedOut: false });
@@ -27,7 +36,6 @@ describe('runAudit', () => {
   });
 
   it('returns do-not-ship when build fails', async () => {
-    process.env.OPENAI_API_KEY = 'sk-test';
     const runCommand = vi.fn().mockImplementation(async (cmd: string) => {
       if (cmd.includes('build')) return { exitCode: 1, stdout: '', stderr: 'boom', timedOut: false };
       return { exitCode: 0, stdout: '', stderr: '', timedOut: false };

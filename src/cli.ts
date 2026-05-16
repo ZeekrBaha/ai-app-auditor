@@ -19,7 +19,7 @@ async function main() {
   const repoPath = path.resolve(opts.path);
 
   if (!process.env.OPENAI_API_KEY) {
-    process.stderr.write('OPENAI_API_KEY required. Set it in your shell or .env. See README.\n');
+    process.stderr.write('OPENAI_API_KEY required. Set it in your shell (e.g. `export OPENAI_API_KEY=sk-...`). See README.\n');
     process.exit(1);
   }
 

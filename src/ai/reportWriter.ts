@@ -79,7 +79,7 @@ export async function aiReportWriter(
   deps: AIDeps = {},
 ): Promise<Report> {
   if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY required. Set it in your shell or .env. See README.');
+    throw new Error('OPENAI_API_KEY required. Set it in your shell (e.g. `export OPENAI_API_KEY=sk-...`). See README.');
   }
   const create = deps.createCompletion ?? defaultCreateCompletion;
   const { verdict, score, blockers, warnings, passed } = scoreFindings(findings);
