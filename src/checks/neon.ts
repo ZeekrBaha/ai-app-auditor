@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-import { exists } from '../util/fs.js';
+import { exists, walkFiles } from '../util/fs.js';
 
 // Anchors require the auth call to start the identifier (not be a member call like firebase.auth()).
 const AUTH_PATTERNS = [
@@ -23,20 +23,6 @@ async function readEnvExampleKeys(repoPath: string): Promise<Set<string>> {
   } catch {
     return new Set();
   }
-}
-
-async function* walkRoutes(repoPath: string): AsyncGenerator<string> {
-  const appDir = path.join(repoPath, 'app');
-  if (!(await exists(appDir))) return;
-  async function* recur(dir: string): AsyncGenerator<string> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) yield* recur(full);
-      else if (e.isFile() && (e.name === 'route.ts' || e.name === 'route.tsx')) yield full;
-    }
-  }
-  yield* recur(appDir);
 }
 
 export const neonCheck: Check = async (ctx) => {
@@ -73,7 +59,13 @@ export const neonCheck: Check = async (ctx) => {
     });
   }
 
-  for await (const route of walkRoutes(ctx.repoPath)) {
+  const appDir = path.join(ctx.repoPath, 'app');
+  if (!(await exists(appDir))) return findings;
+
+  for await (const route of walkFiles(
+    appDir,
+    (e) => e.name === 'route.ts' || e.name === 'route.tsx',
+  )) {
     const content = await fs.readFile(route, 'utf8');
     const usesNeonHere = content.includes('@neondatabase/serverless');
     if (!usesNeonHere) continue;

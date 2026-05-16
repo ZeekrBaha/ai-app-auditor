@@ -1,27 +1,12 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-import { SKIP_DIRS } from '../util/fs.js';
+import { SKIP_DIRS, walkFiles } from '../util/fs.js';
 
 const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const RISKY_SUFFIXES = ['KEY', 'SECRET', 'TOKEN', 'PASSWORD'];
 
 const PROCESS_ENV_RE = /process\.env\.([A-Z][A-Z0-9_]+)/g;
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  let entries;
-  try {
-    entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    if (SKIP_DIRS.has(entry.name)) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) yield* walk(full);
-    else if (entry.isFile() && TEXT_EXTS.has(path.extname(entry.name))) yield full;
-  }
-}
 
 async function readEnvExampleKeys(repoPath: string): Promise<Set<string>> {
   try {
@@ -39,7 +24,11 @@ async function readEnvExampleKeys(repoPath: string): Promise<Set<string>> {
 
 export const envCheck: Check = async (ctx) => {
   const used = new Set<string>();
-  for await (const file of walk(ctx.repoPath)) {
+  for await (const file of walkFiles(
+    ctx.repoPath,
+    (e) => TEXT_EXTS.has(path.extname(e.name)),
+    { skipDirs: SKIP_DIRS },
+  )) {
     let content: string;
     try {
       content = await fs.readFile(file, 'utf8');

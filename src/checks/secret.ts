@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-import { SKIP_DIRS } from '../util/fs.js';
+import { SKIP_DIRS, walkFiles } from '../util/fs.js';
 
 // Patterns intentionally lack the /g flag — we only call test() per-line, never iterate matches.
 const PATTERNS: Array<{ name: string; re: RegExp }> = [
@@ -12,31 +12,16 @@ const PATTERNS: Array<{ name: string; re: RegExp }> = [
   { name: 'Stripe live publishable key', re: /\bpk_live_[a-zA-Z0-9]{20,}/ },
 ];
 
-const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md', '.env']);
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  let entries;
-  try {
-    entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    if (SKIP_DIRS.has(entry.name)) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      yield* walk(full);
-    } else if (entry.isFile()) {
-      const ext = path.extname(entry.name);
-      if (TEXT_EXTS.has(ext) || entry.name.startsWith('.env')) yield full;
-    }
-  }
-}
+const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md']);
 
 export const secretCheck: Check = async (ctx) => {
   const findings: Finding[] = [];
 
-  for await (const file of walk(ctx.repoPath)) {
+  for await (const file of walkFiles(
+    ctx.repoPath,
+    (e) => TEXT_EXTS.has(path.extname(e.name)) || e.name.startsWith('.env'),
+    { skipDirs: SKIP_DIRS },
+  )) {
     let content: string;
     try {
       content = await fs.readFile(file, 'utf8');

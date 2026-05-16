@@ -31,6 +31,6 @@ describe('routeCheck', () => {
       (f) => f.severity === 'pass' && f.title.startsWith('Detected'),
     );
     expect(countFinding).toBeDefined();
-    expect(countFinding!.title).toMatch(/Detected \d+ routes?/);
+    expect(countFinding!.title).toMatch(/Detected \d+ App Router routes?/);
   });
 });

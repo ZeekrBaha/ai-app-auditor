@@ -1,21 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Check, Finding } from '../types.js';
-import { exists } from '../util/fs.js';
-
-async function* walkPages(repoPath: string): AsyncGenerator<string> {
-  const appDir = path.join(repoPath, 'app');
-  if (!(await exists(appDir))) return;
-  async function* recur(dir: string): AsyncGenerator<string> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) yield* recur(full);
-      else if (e.isFile() && (e.name === 'page.ts' || e.name === 'page.tsx')) yield full;
-    }
-  }
-  yield* recur(appDir);
-}
+import { exists, walkFiles } from '../util/fs.js';
 
 async function readMiddleware(repoPath: string): Promise<string | null> {
   for (const name of ['middleware.ts', 'middleware.js']) {
@@ -28,8 +14,16 @@ async function readMiddleware(repoPath: string): Promise<string | null> {
 export const routeCheck: Check = async (ctx) => {
   const findings: Finding[] = [];
 
+  const appDir = path.join(ctx.repoPath, 'app');
   const pages: string[] = [];
-  for await (const f of walkPages(ctx.repoPath)) pages.push(f);
+  if (await exists(appDir)) {
+    for await (const f of walkFiles(
+      appDir,
+      (e) => e.name === 'page.ts' || e.name === 'page.tsx',
+    )) {
+      pages.push(f);
+    }
+  }
 
   const hasAdmin = pages.some((p) => p.includes(`${path.sep}admin${path.sep}`));
   const hasDashboard = pages.some((p) => p.includes(`${path.sep}dashboard${path.sep}`));
@@ -59,7 +53,7 @@ export const routeCheck: Check = async (ctx) => {
   findings.push({
     checkId: 'route',
     severity: 'pass',
-    title: `Detected ${pages.length} route${pages.length === 1 ? '' : 's'}`,
+    title: `Detected ${pages.length} App Router route${pages.length === 1 ? '' : 's'}`,
     detail: '',
   });
 
